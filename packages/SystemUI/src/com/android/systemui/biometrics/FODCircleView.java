@@ -257,15 +257,6 @@ public class FODCircleView extends ImageView {
             BiometricSourceType biometricSourceType) {
             dispatchFodFingerprintRunningStateChanged(running);
         }
-
-        @Override
-        public void onBiometricHelp(int msgId, String helpString,
-                BiometricSourceType biometricSourceType) {
-            if (msgId == -1){ // Auth error
-                mHandler.post(() -> mFODAnimation.hideFODanimation());
-            }
-        }
-
     };
 
     private class FodGestureSettingsObserver extends ContentObserver {
