@@ -17,12 +17,15 @@
 package com.android.internal.util;
 
 import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.os.Handler;
 import android.os.HandlerThread;
 
 
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.OutputStream;
+import java.io.IOException;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -32,8 +35,8 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public final class DogbinUtils {
     private static final String TAG = "DogbinUtils";
-    private static final String BASE_URL = "https://katb.in";
-    private static final String API_URL = "https://api.katb.in/api/paste";
+    private static final String BASE_URL = "https://stagbin.tk";
+    private static final String API_URL = "https://api.stagbin.tk/dev/content/";
     private static Handler handler;
 
     private DogbinUtils() {
@@ -52,14 +55,14 @@ public final class DogbinUtils {
                 try {
                     HttpsURLConnection urlConnection = (HttpsURLConnection) new URL(API_URL).openConnection();
                     try {
-			urlConnection.setRequestProperty("User-Agent","Mozilla/5.0 ( compatible ) ");
-			urlConnection.setRequestProperty("Accept", "*/*");
-	                urlConnection.setRequestProperty("Content-Type", "application/json");
                         urlConnection.setRequestProperty("Accept-Charset", "UTF-8");
                         urlConnection.setDoOutput(true);
-			String data = String.format("{\n\t\"content\": \"%s\"\n}", content);
+
                         try (OutputStream output = urlConnection.getOutputStream()) {
-                            output.write(data.getBytes("UTF-8"));
+                            JsonWriter writer = new JsonWriter(new OutputStreamWriter(output, "UTF-8"));
+                            writer.setIndent("  ");
+                            writeMessage(writer, content);
+                            writer.close();
                         }
                         String key = "";
                         try (JsonReader reader = new JsonReader(
@@ -67,7 +70,7 @@ public final class DogbinUtils {
                             reader.beginObject();
                             while (reader.hasNext()) {
                                 String name = reader.nextName();
-                                if (name.equals("paste_id")) {
+                                if (name.equals("id")) {
                                     key = reader.nextString();
                                     break;
                                 } else {
@@ -79,18 +82,25 @@ public final class DogbinUtils {
                         if (!key.isEmpty()) {
                             callback.onSuccess(getUrl(key));
                         } else {
-                            String msg = "Failed to upload to katbin: No id retrieved";
+                            String msg = "Failed to upload to dogbin: No key retrieved";
                             callback.onFail(msg, new DogbinException(msg));
                         }
                     } finally {
                         urlConnection.disconnect();
                     }
                 } catch (Exception e) {
-                    callback.onFail("Failed to upload to katbin", e);
+                    callback.onFail("Failed to upload to dogbin", e);
                 }
+            }
+
+            public void writeMessage(JsonWriter writer, String content) throws IOException {
+                writer.beginObject();
+                writer.name("data").value(content);
+                writer.endObject();
             }
         });
     }
+
 
     /**
      * Get the view URL from a key
