@@ -200,6 +200,7 @@ public class GlobalActionsDialog implements DialogInterface.OnDismissListener,
     private static final String GLOBAL_ACTION_KEY_LOGOUT = "logout";
     static final String GLOBAL_ACTION_KEY_EMERGENCY = "emergency";
     static final String GLOBAL_ACTION_KEY_SCREENSHOT = "screenshot";
+    private static final String GLOBAL_ACTION_KEY_REBOOT_SYSTEMUI = "reboot_systemui";
     private static final String GLOBAL_ACTION_KEY_REBOOT_RECOVERY = "reboot_recovery";
     private static final String GLOBAL_ACTION_KEY_REBOOT_BOOTLOADER = "reboot_bootloader";
     private static final String GLOBAL_ACTION_KEY_REBOOT_FASTBOOT = "reboot_fastboot";
@@ -666,7 +667,9 @@ public class GlobalActionsDialog implements DialogInterface.OnDismissListener,
                 items.add(new RebootRecoveryAction());
             } else if (GLOBAL_ACTION_KEY_REBOOT_BOOTLOADER.equals(actionKey)) {
                 items.add(new RebootBootloaderAction());
-            }
+            } else if (GLOBAL_ACTION_KEY_REBOOT_SYSTEMUI.equals(actionKey)) {
+                items.add(new RebootSystemUIAction());
+            } 
         }
         return items;
     }
@@ -801,8 +804,9 @@ public class GlobalActionsDialog implements DialogInterface.OnDismissListener,
             } else if (GLOBAL_ACTION_KEY_REBOOT_BOOTLOADER.equals(actionKey) &&
                     isAdvancedRebootPossible(mContext)) {
                 addIfShouldShowAction(tempActions, new RebootBootloaderAction());
-
-
+	    } else if (GLOBAL_ACTION_KEY_REBOOT_SYSTEMUI.equals(actionKey) &&
+                    isAdvancedRebootPossible(mContext)) {
+                addIfShouldShowAction(tempActions, new RebootSystemUIAction());
             } else if (GLOBAL_ACTION_KEY_REBOOT_FASTBOOT.equals(actionKey) &&
                     isAdvancedRebootPossible(mContext)) {
                 addIfShouldShowAction(tempActions, new RebootFastbootAction());
@@ -1159,6 +1163,34 @@ public class GlobalActionsDialog implements DialogInterface.OnDismissListener,
                     mWindowManagerFuncs.reboot(false, null);
                 }
             }
+        }
+    }
+
+
+      private final class RebootSystemUIAction extends SinglePressAction {
+        private RebootSystemUIAction() {
+            super(com.android.systemui.R.drawable.ic_restart_bootloader,
+                    com.android.systemui.R.string.global_action_reboot_systemui);
+        }
+
+        @Override
+        public boolean showDuringKeyguard() {
+            return true;
+        }
+
+        @Override
+        public boolean showDuringRestrictedKeyguard() {
+            return false;
+        }
+
+        @Override
+        public boolean showBeforeProvisioning() {
+            return true;
+        }
+
+        @Override
+        public void onPress() {
+            mWindowManagerFuncs.reboot(false, PowerManager.REBOOT_SYSTEMUI);
         }
     }
 

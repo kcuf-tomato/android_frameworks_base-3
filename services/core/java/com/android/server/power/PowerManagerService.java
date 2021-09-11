@@ -98,6 +98,7 @@ import com.android.internal.app.IAppOpsService;
 import com.android.internal.app.IBatteryStats;
 import com.android.internal.os.BackgroundThread;
 import com.android.internal.util.DumpUtils;
+import com.android.internal.util.stag.StagUtils;
 import com.android.server.EventLogTags;
 import com.android.server.LockGuard;
 import com.android.server.RescueParty;
@@ -5463,6 +5464,9 @@ public final class PowerManagerService extends SystemService
                 mContext.enforceCallingOrSelfPermission(android.Manifest.permission.RECOVERY, null);
             }
 
+            if (PowerManager.REBOOT_SYSTEMUI.equals(reason)){
+		StagUtils.restartSystemUi(mContext);
+	    }
             final long ident = Binder.clearCallingIdentity();
             try {
                 shutdownOrRebootInternal(HALT_MODE_REBOOT, confirm, reason, wait, false);
